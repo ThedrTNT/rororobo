@@ -1,7 +1,7 @@
 #!/bin/bash
 cp -ri ./ ~/Programming/Robotics/teamcode/
 cd ~/Programming/Robotics/teamcode/
-echo "Commit Message: "
+echo -n "Commit Message: "
 read commit
 git add *
 git commit -m "$commit"
