@@ -254,6 +254,8 @@ public class MotorSet implements DcMotor, Runnable {
 
     //Lerp between an initial value and a target value with a ∆t
     private double lerp(double initial, double target, double deltaTime) {
+        if(target > 0 && target < initial)
+            deltaTime = Math.sqrt(deltaTime);
         return (1 - deltaTime) * initial + deltaTime * target;
     }
 

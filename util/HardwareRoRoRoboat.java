@@ -18,6 +18,7 @@ public class HardwareRoRoRoboat {
     private DcMotor leftFront;
     private DcMotor rightRear;
     private DcMotor leftRear;
+    private DcMotor vortexSpinner;
     private Gamepad gamepad;
     private MotorSet leftMotors;
     private MotorSet rightMotors;
@@ -35,6 +36,7 @@ public class HardwareRoRoRoboat {
         leftRear = hwMap.dcMotor.get("left_rear");
         rightFront = hwMap.dcMotor.get("right_front");
         rightRear = hwMap.dcMotor.get("right_rear");
+        vortexSpinner = hwMap.dcMotor.get("vortex_spinner");
         //Initialize the motor sets
         leftMotors = new MotorSet();
         rightMotors = new MotorSet();
@@ -51,6 +53,7 @@ public class HardwareRoRoRoboat {
         rightMotors.setDirection(DcMotorSimple.Direction.REVERSE);
         leftMotors.setDirection(DcMotorSimple.Direction.FORWARD);
         allMotors.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        vortexSpinner.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //Initialize the gamepad
         this.gamepad = gamepad;
         new Thread(leftMotors).run();
@@ -123,5 +126,9 @@ public class HardwareRoRoRoboat {
 
     public MotorSet getRightMotors() {
         return rightMotors;
+    }
+
+    public void setVortexPower(double power) {
+        vortexSpinner.setPower(power);
     }
 }
