@@ -1,12 +1,9 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.util;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Kenny Tang 2017.
@@ -26,6 +23,8 @@ public class HardwareRoRoRoboat {
     private MotorSet rightMotors;
     private MotorSet allMotors;
     private GamepadState gamepadState;
+    private double lerpSpeedLeft;
+    private double lerpSpeedRight;
 
     //Constructor to initialize the Hardware class
     public HardwareRoRoRoboat(HardwareMap hwMap, Gamepad gamepad) {
@@ -54,21 +53,37 @@ public class HardwareRoRoRoboat {
         allMotors.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //Initialize the gamepad
         this.gamepad = gamepad;
-
+        new Thread(leftMotors).run();
+        new Thread(rightMotors).run();
     }
 
-    //Set the power of all motors
+    /**
+     * Set the power of all motors
+     * @depricated
+     * Use lerpToPower instead
+     */
+    @Deprecated
     public void driveAllPower(double power) {
         allMotors.setPower(power);
     }
 
-    //Set the power of the left and right motors
+    /**
+     * Set the power of the left and right motors
+     * @depricated
+     * Use lerpToPower instead
+     */
+    @Deprecated
     public void drivePower(double powerLeft, double powerRight) {
         leftMotors.setPower(powerLeft);
         rightMotors.setPower(powerRight);
     }
 
-    //Drive to the amount given using the power given
+    /**
+     * Drive to the amount given using the power given
+     * @depricated
+     * Use lerpToPower instead
+     */
+    @Deprecated
     public void driveEncode(int leftAmount, int rightAmount, double power) {
         leftMotors.addToPosition(leftAmount);
         rightMotors.addToPosition(rightAmount);
@@ -81,16 +96,7 @@ public class HardwareRoRoRoboat {
         leftMotors.addToPosition(leftAmount);
         rightMotors.addToPosition(rightAmount);
         allMotors.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        double lerpPower = 0.0d;
-        long lastTime = System.nanoTime();
-        long curTime;
-        while(lerpPower < power) {
-            curTime = System.nanoTime();
-            lerpPower = lerp(lerpPower, power, nanoToSeconds(curTime - lastTime));
-            allMotors.setPower(lerpPower);
-            lastTime = System.nanoTime();
-        }
-        allMotors.setPower(power);
+        lerpToPower(power, power);
     }
 
     //Stop all motors and reset the encoder
@@ -104,17 +110,13 @@ public class HardwareRoRoRoboat {
         allMotors.reverseDirections();
     }
 
-    //Convert nanoseconds to seconds
-    private double nanoToSeconds(long nanotime) {
-        return nanotime / 1000000000.0d;
+    //Lerp to power using separate motor threads
+    public void lerpToPower(double leftPower, double rightPower) {
+        leftMotors.setLerpPower(leftPower);
+        rightMotors.setLerpPower(rightPower);
     }
 
-    //Lerp between an initial value and a target value with a ∆t
-    private double lerp(double initial, double target, double deltaTime) {
-        return (1 - deltaTime) * initial + deltaTime * target;
-    }
-
-    //Getters
+    //Getters and Setters
     public MotorSet getLeftMotors() {
         return leftMotors;
     }

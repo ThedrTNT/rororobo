@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.util;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
@@ -9,12 +9,15 @@ import java.util.Set;
 /**
  * Kenny Tang 2017.
  */
-public class MotorSet implements DcMotor{
-
+public class MotorSet implements DcMotor, Runnable {
+    private boolean running;
+    private double lerpPower;
     private Set<DcMotor> motorSet;
     private DcMotor defaultMotor;
 
     public MotorSet() {
+        running = true;
+        lerpPower = 0.0d;
         this.motorSet = new HashSet<>();
     }
 
@@ -214,5 +217,48 @@ public class MotorSet implements DcMotor{
     public void close() {
         for(DcMotor motor : motorSet)
             motor.close();
+    }
+
+
+    public void stop() {
+        this.running = true;
+    }
+
+    public void resume() {
+        this.running = false;
+    }
+
+    public void setLerpPower(double lerpPower) {
+        this.lerpPower = lerpPower;
+    }
+
+    @Override
+    public void run() {
+        while(running) {
+            lerpToPower(this, lerpPower);
+        }
+    }
+
+    //Lerp to a target power
+    private void lerpToPower(MotorSet motors, double power) {
+        double lerpPower = motors.getPower();
+        long lastTime = System.nanoTime();
+        long curTime;
+        while(lerpPower < power) {
+            curTime = System.nanoTime();
+            lerpPower = lerp(lerpPower, power, nanoToSeconds(curTime - lastTime));
+            motors.setPower(lerpPower);
+            lastTime = System.nanoTime();
+        }
+    }
+
+    //Lerp between an initial value and a target value with a ∆t
+    private double lerp(double initial, double target, double deltaTime) {
+        return (1 - deltaTime) * initial + deltaTime * target;
+    }
+
+    //Convert nanoseconds to seconds
+    private double nanoToSeconds(long nanotime) {
+        return nanotime / 1000000000.0d;
     }
 }
