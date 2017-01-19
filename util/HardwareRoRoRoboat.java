@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 /**
  * Kenny Tang 2017.
@@ -19,45 +20,47 @@ public class HardwareRoRoRoboat {
     private DcMotor rightRear;
     private DcMotor leftRear;
     private DcMotor vortexSpinner;
-    private Gamepad gamepad;
     private MotorSet leftMotors;
     private MotorSet rightMotors;
     private MotorSet allMotors;
     private GamepadState gamepadState;
-    private double lerpSpeedLeft;
-    private double lerpSpeedRight;
+    private Telemetry telemetry;
+    public static final boolean DEBUG = true;
 
     //Constructor to initialize the Hardware class
-    public HardwareRoRoRoboat(HardwareMap hwMap, Gamepad gamepad) {
+    public HardwareRoRoRoboat(HardwareMap hwMap, Gamepad gamepad, Telemetry telemetry) {
         //Set the hardware map to the teleop's
         this.hwMap = hwMap;
+        //Set the telemetry to the teleop's for debugging purposes
+        this.telemetry = telemetry;
         //Initializing Hardware
         leftFront = hwMap.dcMotor.get("left_front");
-        leftRear = hwMap.dcMotor.get("left_rear");
+        //leftRear = hwMap.dcMotor.get("left_rear");
         rightFront = hwMap.dcMotor.get("right_front");
-        rightRear = hwMap.dcMotor.get("right_rear");
+        //rightRear = hwMap.dcMotor.get("right_rear");
         vortexSpinner = hwMap.dcMotor.get("vortex_spinner");
         //Initialize the motor sets
-        leftMotors = new MotorSet();
-        rightMotors = new MotorSet();
-        allMotors = new MotorSet();
+        leftMotors = new MotorSet(telemetry);
+        rightMotors = new MotorSet(telemetry);
+        allMotors = new MotorSet(telemetry);
         leftMotors.addMotor(leftFront);
-        leftMotors.addMotor(leftRear);
+        //leftMotors.addMotor(leftRear);
         rightMotors.addMotor(rightFront);
-        rightMotors.addMotor(rightRear);
+        //rightMotors.addMotor(rightRear);
         allMotors.addMotor(leftFront);
-        allMotors.addMotor(leftRear);
+        //allMotors.addMotor(leftRear);
         allMotors.addMotor(rightFront);
-        allMotors.addMotor(rightRear);
+        //allMotors.addMotor(rightRear);
         //Setting up the hardware
         rightMotors.setDirection(DcMotorSimple.Direction.REVERSE);
         leftMotors.setDirection(DcMotorSimple.Direction.FORWARD);
         allMotors.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         vortexSpinner.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //Initialize the gamepad
-        this.gamepad = gamepad;
         new Thread(leftMotors).run();
         new Thread(rightMotors).run();
+        //Set up gamepad
+        this.gamepadState = new GamepadState(gamepad);
     }
 
     /**
@@ -104,6 +107,9 @@ public class HardwareRoRoRoboat {
 
     //Stop all motors and reset the encoder
     public void stopAndReset() {
+        if(DEBUG)
+            updateTelemetryAction("Stop and Reset");
+        allMotors.stop();
         allMotors.setPower(0.0d);
         allMotors.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
@@ -115,8 +121,20 @@ public class HardwareRoRoRoboat {
 
     //Lerp to power using separate motor threads
     public void lerpToPower(double leftPower, double rightPower) {
+        if(DEBUG)
+            updateTelemetryAction("Lerp to Power");
         leftMotors.setLerpPower(leftPower);
         rightMotors.setLerpPower(rightPower);
+    }
+
+    //Set the vortex wheel's power
+    public void setVortexPower(double power) {
+        vortexSpinner.setPower(power);
+    }
+
+    //Update the current action for telemetry
+    private void updateTelemetryAction(String action) {
+        telemetry.addData("Status", "Current Action: %s", action);
     }
 
     //Getters and Setters
@@ -128,7 +146,7 @@ public class HardwareRoRoRoboat {
         return rightMotors;
     }
 
-    public void setVortexPower(double power) {
-        vortexSpinner.setPower(power);
+    public GamepadState getGamepadState() {
+        return gamepadState;
     }
 }

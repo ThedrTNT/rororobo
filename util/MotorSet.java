@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.util;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,16 +15,18 @@ public class MotorSet implements DcMotor, Runnable {
     private double lerpPower;
     private Set<DcMotor> motorSet;
     private DcMotor defaultMotor;
+    private Telemetry telemetry;
 
-    public MotorSet() {
+    public MotorSet(Telemetry telemetry) {
         running = true;
         lerpPower = 0.0d;
+        this.telemetry = telemetry;
         this.motorSet = new HashSet<>();
     }
 
     public boolean addMotor(DcMotor motor){
         //Set the default motor to the first motor added
-        if(defaultMotor != null)
+        if(defaultMotor == null)
             defaultMotor = motor;
         return motorSet.add(motor);
     }
@@ -244,17 +247,20 @@ public class MotorSet implements DcMotor, Runnable {
         double lerpPower = motors.getPower();
         long lastTime = System.nanoTime();
         long curTime;
-        while(lerpPower < power) {
+        while(lerpPower < power && running) {
             curTime = System.nanoTime();
             lerpPower = lerp(lerpPower, power, nanoToSeconds(curTime - lastTime));
             motors.setPower(lerpPower);
             lastTime = System.nanoTime();
+            if(HardwareRoRoRoboat.DEBUG)
+                telemetry.addData("Lerp", "Values: curTime: " + curTime + "lerpPower: " + lerpPower + "lastTime: " + lastTime);
+            Thread.yield();
         }
     }
 
-    //Lerp between an initial value and a target value with a ∆t
+    //Lerp between an initial value and a target value with a ∆t, speed up if braking
     private double lerp(double initial, double target, double deltaTime) {
-        if(target > 0 && target < initial)
+        if(target < initial && initial > 0)
             deltaTime = Math.sqrt(deltaTime);
         return (1 - deltaTime) * initial + deltaTime * target;
     }
